@@ -1,0 +1,49 @@
+{
+  "name": "babel-plugin-transform-util-promisify",
+  "version": "0.1.0",
+  "description": "Transforms util.promisify for node versions < 8",
+  "main": "dist/index.js",
+  "scripts": {
+    "prepublish": "npm run build",
+    "lint": "xo",
+    "dev": "webpack --mode development",
+    "build": "webpack --mode production",
+    "test": "ava && npm run lint",
+    "start": "npm run build && node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/assister-ai/babel-plugin-transform-util-promisify.git"
+  },
+  "keywords": [
+    "babel",
+    "promosify"
+  ],
+  "author": "Keyvan Mir Mohammad Sadeghi <keyvan.m.sadeghi@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/assister-ai/babel-plugin-transform-util-promisify/issues"
+  },
+  "homepage": "https://github.com/assister-ai/babel-plugin-transform-util-promisify#readme",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "babel-cli": "^6.11.4",
+    "babel-core": "^6.13.2",
+    "babel-eslint": "^8.2.2",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.7.2",
+    "eslint": "^4.18.1",
+    "eslint-loader": "^1.5.0",
+    "eslint-plugin-babel": "^4.1.2",
+    "webpack": "^4.0.0",
+    "webpack-cli": "^2.0.8",
+    "xo": "^0.20.3"
+  },
+  "dependencies": {
+    "babel-runtime": "^6.18.0",
+    "regenerator-runtime": "^0.11.1"
+  }
+}
