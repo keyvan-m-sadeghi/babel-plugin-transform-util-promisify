@@ -1,10 +1,11 @@
 // Adopted from https://github.com/nodejs/node/blob/master/lib/internal/util.js
-// changed "createPromise" to "new Promise" to accomodate node versions < 8
+// refactored to accomodate node versions < 8
 const promisifyCode = `
 const kCustomPromisifiedSymbol = Symbol('util.promisify.custom');
 const kCustomPromisifyArgsSymbol = Symbol('customPromisifyArgs');
 
 function promisify(original) {
+  let promisifyContext;
   if (typeof original !== 'function')
     throw new errors.TypeError('ERR_INVALID_ARG_TYPE', 'original', 'Function');
 
@@ -29,7 +30,7 @@ function promisify(original) {
   function fn(...args) {
     const promise = new Promise(function (promiseResolve, promiseReject) {
       try {
-        original.call(this, ...args, (err, ...values) => {
+        original.call(promisifyContext || this, ...args, (err, ...values) => {
           if (err) {
             promiseReject(err);
           } else if (argumentNames !== undefined && values.length > 1) {
@@ -49,6 +50,13 @@ function promisify(original) {
   }
 
   Object.setPrototypeOf(fn, Object.getPrototypeOf(original));
+
+  Object.defineProperty(fn, 'bind', {
+    value: context => {
+      promisifyContext = context;
+      return fn;
+    }, enumerable: false, writable: false, configurable: true
+  });
 
   Object.defineProperty(fn, kCustomPromisifiedSymbol, {
     value: fn, enumerable: false, writable: false, configurable: true
