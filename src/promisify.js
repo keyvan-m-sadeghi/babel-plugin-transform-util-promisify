@@ -1,4 +1,5 @@
 // Adopted from https://github.com/nodejs/node/blob/master/lib/internal/util.js
+const promisifyCode = `
 const kCustomPromisifiedSymbol = Symbol('util.promisify.custom');
 const kCustomPromisifyArgsSymbol = Symbol('customPromisifyArgs');
 
@@ -57,3 +58,6 @@ function promisify(original) {
 }
 
 promisify.custom = kCustomPromisifiedSymbol;
+`;
+
+export {promisifyCode};
