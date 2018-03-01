@@ -1,6 +1,32 @@
-const nodeJsVersionIsAboveEight = parseInt(process.version[1]) >= 10;
+import path from 'path';
+import fs from 'fs';
+import {parse} from 'babylon';
 
-export default function () {
+const nodeJsVersionIsAboveEight = parseInt(process.version[1], 10) >= 10;
+
+const isRequireUtilPromisify = (nodePath) => {
+  const callee = nodePath.get('callee');
+  if (!callee.isIdentifier() || !callee.equals('name', 'require')) {
+		return false;
+	}
+  const arg = nodePath.get('arguments')[0];
+  if (arg && arg.isStringLiteral() && nodePath.parentPath.isVariableDeclarator() && arg.node.value === 'util') {
+    const parentPath = nodePath.parentPath;
+    if (parentPath.isVariableDeclarator() && parentPath.node.id.type === 'ObjectPattern' && parentPath.node.id.properties[0].key.name === 'promisify') {
+      return true;
+    }
+  }
+  return false;
+};
+
+export default function (babel) {
+	debugger;
+
+	const code = fs.readFileSync('/home/keyvan/babel-plugin-transform-util-promisify/src/promisify.js', 'utf8');
+	const promisifyAST = parse(code, {
+		sourceType: 'script'
+	});
+
 	function extFix(ext) {
 		return ext.charAt(0) === '.' ? ext : (`.${ext}`);
 	}
@@ -11,27 +37,19 @@ export default function () {
 				enter(nodePath, {opts}) {
 					if (nodeJsVersionIsAboveEight) {
 						return;
-					}
-
-					const callee = nodePath.get('callee');
-
-					if (callee.isIdentifier() && callee.equals('name', 'require')) {
-						const arg = nodePath.get('arguments')[0];
-						if (arg && arg.isStringLiteral() && nodePath.parentPath.isVariableDeclarator() && arg.node.value === 'util') {
-							if (nodePath.parentPath.isVariableDeclarator()) {
-                                nodePath.replaceWithSourceString('sege');
-                                console.log(process.version);
-							} else {
-                nodePath.remove();
-							}
-						}
+          }
+          if (isRequireUtilPromisify(nodePath)) {
+						nodePath.parentPath.parentPath.insertBefore(promisifyAST);
+						nodePath.parentPath.parentPath.remove();
 					}
 				}
 			},
 
 			ImportDeclaration: {
 				enter(nodePath, {opts}) {
-					const extensionsInput = [].concat(opts.extensions || []);
+					if (nodeJsVersionIsAboveEight) {
+						return;
+          }
 
 					if (extensionsInput.length === 0) {
 						return;
@@ -41,24 +59,10 @@ export default function () {
 					if (extensions.indexOf(path.extname(nodePath.node.source.value)) > -1) {
 						const specifiers = nodePath.get('specifiers');
 
-						if (specifiers.length > 0) {
-							const specifier = specifiers[specifiers.length - 1];
-
-							if (specifier.isImportDefaultSpecifier()) {
-								throw new Error(`${nodePath.node.source.value} should not be imported using default imports.`);
-							}
-							if (specifier.isImportSpecifier()) {
-								throw new Error(`${nodePath.node.source.value} should not be imported using named imports.`);
-							}
-							if (specifier.isImportNamespaceSpecifier()) {
-								throw new Error(`${nodePath.node.source.value} should not be imported using namespace imports.`);
-							}
-						}
-
             nodePath.remove();
 					}
 				}
 			}
 		}
-	};
-}
+	}
+};
