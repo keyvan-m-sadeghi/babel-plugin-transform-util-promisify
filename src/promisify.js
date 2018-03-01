@@ -1,4 +1,5 @@
 // Adopted from https://github.com/nodejs/node/blob/master/lib/internal/util.js
+// changed "createPromise" to "new Promise" to accomodate node versions < 8
 const promisifyCode = `
 const kCustomPromisifiedSymbol = Symbol('util.promisify.custom');
 const kCustomPromisifyArgsSymbol = Symbol('customPromisifyArgs');
@@ -26,23 +27,24 @@ function promisify(original) {
   const argumentNames = original[kCustomPromisifyArgsSymbol];
 
   function fn(...args) {
-    const promise = createPromise();
-    try {
-      original.call(this, ...args, (err, ...values) => {
-        if (err) {
-          promiseReject(promise, err);
-        } else if (argumentNames !== undefined && values.length > 1) {
-          const obj = {};
-          for (var i = 0; i < argumentNames.length; i++)
-            obj[argumentNames[i]] = values[i];
-          promiseResolve(promise, obj);
-        } else {
-          promiseResolve(promise, values[0]);
-        }
-      });
-    } catch (err) {
-      promiseReject(promise, err);
-    }
+    const promise = new Promise(function (promiseResolve, promiseReject) {
+      try {
+        original.call(this, ...args, (err, ...values) => {
+          if (err) {
+            promiseReject(err);
+          } else if (argumentNames !== undefined && values.length > 1) {
+            const obj = {};
+            for (var i = 0; i < argumentNames.length; i++)
+              obj[argumentNames[i]] = values[i];
+            promiseResolve(obj);
+          } else {
+            promiseResolve(values[0]);
+          }
+        });
+      } catch (err) {
+        promiseReject(err);
+      }
+    });
     return promise;
   }
 
