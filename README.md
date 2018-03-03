@@ -1,4 +1,5 @@
 [![npm version](https://badge.fury.io/js/babel-plugin-transform-util-promisify.svg)](https://www.npmjs.com/package/babel-plugin-transform-util-promisify)
+[![Build Status](https://travis-ci.org/assister-ai/babel-plugin-transform-util-promisify.svg?branch=master)](https://travis-ci.org/assister-ai/babel-plugin-transform-util-promisify)
 
 # babel-plugin-transform-util-promisify
 Transforms `util.promisify` to a function definition
