@@ -17,6 +17,8 @@
   },
   "keywords": [
     "babel",
+    "babel-plugin",
+    "promise",
     "promosify"
   ],
   "author": "Keyvan Mir Mohammad Sadeghi <keyvan.m.sadeghi@gmail.com>",
