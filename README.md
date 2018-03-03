@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/babel-plugin-transform-util-promisify.svg)](https://www.npmjs.com/package/babel-plugin-transform-util-promisify)
+
 # babel-plugin-transform-util-promisify
 Transforms `util.promisify` to a function definition
 for node versions &lt; 8, automatically detects if node version >= 8 and does nothing if so.
