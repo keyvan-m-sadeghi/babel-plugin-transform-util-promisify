@@ -1,6 +1,6 @@
 import {promisifyAST} from './promisify';
 
-const nodeJsVersionIsAboveEight = parseInt(process.version[1], 10) >= 10;
+const nodeJsVersionIsAboveEight = parseInt(process.version[1], 10) >= 8;
 
 const isRequireUtilPromisify = nodePath => {
 	const callee = nodePath.get('callee');
