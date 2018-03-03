@@ -1,3 +1,5 @@
+import {parse} from 'babylon';
+
 // Adopted from https://github.com/nodejs/node/blob/master/lib/internal/util.js
 // refactored to accomodate node versions < 8
 const promisifyCode = `
@@ -70,4 +72,8 @@ function promisify(original) {
 promisify.custom = kCustomPromisifiedSymbol;
 `;
 
-export {promisifyCode};
+const promisifyAST = parse(promisifyCode, {
+	sourceType: 'script'
+});
+
+export {promisifyCode, promisifyAST};

@@ -1,49 +1,50 @@
-import {parse} from 'babylon';
-import {promisifyCode} from './promisify';
+import {promisifyAST} from './promisify';
 
-const nodeJsVersionIsAboveEight = parseInt(process.version[1], 10) >= 8;
+const nodeJsVersionIsAboveEight = parseInt(process.version[1], 10) >= 10;
 
-const isRequireUtilPromisify = (nodePath) => {
-  const callee = nodePath.get('callee');
-  if (!callee.isIdentifier() || !callee.equals('name', 'require')) {
+const isRequireUtilPromisify = nodePath => {
+	const callee = nodePath.get('callee');
+	if (!callee.isIdentifier() || !callee.equals('name', 'require')) {
 		return false;
 	}
-  const arg = nodePath.get('arguments')[0];
-  if (arg && arg.isStringLiteral() && nodePath.parentPath.isVariableDeclarator() && arg.node.value === 'util') {
-    const parentPath = nodePath.parentPath;
-    if (parentPath.isVariableDeclarator() && parentPath.node.id.type === 'ObjectPattern' && parentPath.node.id.properties[0].key.name === 'promisify') {
-      return true;
-    }
-  }
-  return false;
+	const arg = nodePath.get('arguments')[0];
+	if (arg && arg.isStringLiteral() && nodePath.parentPath.isVariableDeclarator() && arg.node.value === 'util') {
+		const parentPath = nodePath.parentPath;
+		if (parentPath.isVariableDeclarator() && parentPath.node.id.type === 'ObjectPattern' && parentPath.node.id.properties[0].key.name === 'promisify') {
+			return true;
+		}
+	}
+	return false;
 };
 
-const promisifyAST = parse(promisifyCode, {
-	sourceType: 'script'
-});
+const isImportUtilPromisify = nodePath => {
+	return nodePath.node.source.value === 'util' && nodePath.node.specifiers[0].imported.name === 'promisify';
+};
 
-export default function (babel) {
+const getVisitorEnterFor = (assertFn, pathDepth) => nodePath => {
+	if (nodeJsVersionIsAboveEight) {
+		return;
+	}
+	if (assertFn(nodePath)) {
+		let pathToReplace = nodePath;
+		for (let i = 0; i < pathDepth; i++) {
+			pathToReplace = pathToReplace.parentPath;
+		}
+		pathToReplace.insertBefore(promisifyAST);
+		pathToReplace.remove();
+	}
+};
+
+export default function () {
 	return {
 		visitor: {
 			CallExpression: {
-				enter(nodePath, {opts}) {
-					if (nodeJsVersionIsAboveEight) {
-						return;
-          }
-          if (isRequireUtilPromisify(nodePath)) {
-						nodePath.parentPath.parentPath.insertBefore(promisifyAST);
-						nodePath.parentPath.parentPath.remove();
-					}
-				}
+				enter: getVisitorEnterFor(isRequireUtilPromisify, 2)
 			},
 
 			ImportDeclaration: {
-				enter(nodePath, {opts}) {
-					if (nodeJsVersionIsAboveEight) {
-						return;
-          }
-				}
+				enter: getVisitorEnterFor(isImportUtilPromisify, 0)
 			}
 		}
-	}
-};
+	};
+}
